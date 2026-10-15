@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mower Math - app</title>
+<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
+<style>
+  :root { --accent: #6e7a3a; }
+  h1 { color: var(--accent); margin-bottom: 0.2em; }
+  .tag { color: var(--accent); font-style: italic; }
+  .card { border: 1px solid #ddd; border-left: 4px solid var(--accent); padding: 1em 1.2em; margin: 1.2em 0; border-radius: 4px; }
+  .big { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-top: 0.8em; }
+  .err { color: #b00; font-weight: 700; }
+  label { display: block; margin-top: 0.6em; font-size: 0.9em; }
+  input, select { max-width: 12em; }
+  .foot { margin-top: 2.5em; font-size: 0.85em; color: #777; }
+</style>
+</head>
+<body>
+<h1>Mower Math</h1>
+<p class="tag">Battery truth, pace truth and charge truth - labeled norms, honest arithmetic.</p>
+
+<div class="card">
+  <h3>The battery truth</h3>
+  <label for="b-volts">Sticker volts</label>
+  <input id="b-volts" type="number" step="any" value="40">
+  <label for="b-ah">Pack amp-hours</label>
+  <input id="b-ah" type="number" step="any" value="4">
+  <label for="b-claim">Square feet the box claims</label>
+  <input id="b-claim" type="number" step="any" value="5000">
+  <label for="b-thirst">Grass thirst (watt-hours per 1000 sqft: 20 short, 30 ordinary, 45 tall or wet)</label>
+  <input id="b-thirst" type="number" step="any" value="30">
+  <p class="big" id="b-out"></p>
+</div>
+
+<div class="card">
+  <h3>The pace truth</h3>
+  <label for="p-deck">Deck width (inches)</label>
+  <input id="p-deck" type="number" step="any" value="21">
+  <label for="p-mph">Walking speed (mph)</label>
+  <input id="p-mph" type="number" step="any" value="3">
+  <label for="p-lawn">Lawn size (square feet)</label>
+  <input id="p-lawn" type="number" step="any" value="6000">
+  <p class="big" id="p-out"></p>
+</div>
+
+<div class="card">
+  <h3>The charge truth</h3>
+  <label for="c-wh">Pack size (watt-hours)</label>
+  <input id="c-wh" type="number" step="any" value="160">
+  <label for="c-watts">Charger watts</label>
+  <input id="c-watts" type="number" step="any" value="60">
+  <p class="big" id="c-out"></p>
+</div>
+
+<p class="foot">The 0.9 voltage norm, the grass thirst figures, and the 0.85 overlap and 1.15 loss norms are labeled norms - the arithmetic is honest, and the far fence keeps the honest ledger.</p>
+
+<script src="engine.js"></script>
+<script>
+function g(id){ return document.getElementById(id); }
+function v(id){ var n = parseFloat(g(id).value); return isNaN(n) ? NaN : n; }
+function show(id, s, bad){ var el = g(id); el.textContent = s; el.className = bad ? "err big" : "big"; }
+
+function runBatt(){
+  var args = [v("b-volts"), v("b-ah"), v("b-claim"), v("b-thirst")];
+  var r = MowerMath.battPlan.apply(null, args);
+  if (r.error) return show("b-out", r.error, true);
+  show("b-out", MowerMath.renderBatt.apply(null, [r].concat(args)), false);
+}
+function runPace(){
+  var args = [v("p-deck"), v("p-mph"), v("p-lawn")];
+  var r = MowerMath.pacePlan.apply(null, args);
+  if (r.error) return show("p-out", r.error, true);
+  show("p-out", MowerMath.renderPace.apply(null, [r].concat(args)), false);
+}
+function runCharge(){
+  var args = [v("c-wh"), v("c-watts")];
+  var r = MowerMath.chargePlan.apply(null, args);
+  if (r.error) return show("c-out", r.error, true);
+  show("c-out", MowerMath.renderCharge.apply(null, [r].concat(args)), false);
+}
+["b-volts", "b-ah", "b-claim", "b-thirst"].forEach(function(id){ g(id).addEventListener("input", runBatt); });
+["p-deck", "p-mph", "p-lawn"].forEach(function(id){ g(id).addEventListener("input", runPace); });
+["c-wh", "c-watts"].forEach(function(id){ g(id).addEventListener("input", runCharge); });
+runBatt(); runPace(); runCharge();
+</script>
+</body>
+</html>
